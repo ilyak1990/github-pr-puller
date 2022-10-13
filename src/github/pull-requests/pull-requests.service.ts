@@ -16,16 +16,10 @@ export class PullRequestsService {
             throw new BadRequestException(pullsUrl.message)
         }
         try {
-            let x = this.httpService.get(pullsUrl)
-            console.log("okay")
-            let { data } = await firstValueFrom(x)
-            console.log(pullsUrl, 'pulls url')
+            let { data } = await firstValueFrom(this.httpService.get(pullsUrl))
 
             let pullRequests = await new Promise(async (resolve) => {
-                console.log("??", data)
                 for await (const pr of data) {
-                    console.log("***************")
-                    console.log(pr)
                     if (pr?._links) {
                         try {
                             let commits = await firstValueFrom(this.httpService.get(pr._links.commits?.href))

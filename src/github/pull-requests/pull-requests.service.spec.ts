@@ -6,10 +6,17 @@ import { UrlConstructorService } from '../helper/url-constructor/url-constructor
 import { PullRequest } from './pull-request.model';
 import { PullRequestsService } from './pull-requests.service';
 import { Console } from 'console';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, InternalServerErrorException } from '@nestjs/common';
 
 describe('PullRequestsService', () => {
   let service: PullRequestsService;
+  const incorrectPrResult: AxiosResponse = {
+    data: [{ id: 1, number: 1, title: 'title', user: { login: 'user' } }],
+    status: 200,
+    statusText: 'OK',
+    headers: {},
+    config: {}
+  };
   const prResult: AxiosResponse = {
     data: [{ id: 1, number: 1, title: 'title', user: { login: 'user' }, _links: { commits: { href: 'https://github-dummy-url.com/commits' } } }],
     status: 200,
@@ -56,12 +63,26 @@ describe('PullRequestsService', () => {
     expect(prs).toEqual([new PullRequest(1, 1, 'title', 'user', commitsResult.data.length)])
   });
   it('should error on url', async () => {
-    jest.spyOn(urlService,'constructPullRequestUrl').mockReturnValue(new Error('errored url'))
+    jest.spyOn(urlService, 'constructPullRequestUrl').mockReturnValue(new Error('errored url'))
     await expect(service.getPullRequests('https://incoming-url.com')).rejects.toEqual(new BadRequestException('errored url'));
 
   });
-  it('should error on url', async () => {
-    await expect(service.getPullRequests('https://incoming-url.com')).rejects.toEqual(new BadRequestException('errored url'));
-
+  it('should error on original pulls call', async () => {
+    jest.spyOn(httpService, 'get').mockImplementation((url) => {
+      return new BadRequestException('bad request coming from github');
+    })
+    await expect(service.getPullRequests('https://incoming-url.com')).rejects.toEqual(new InternalServerErrorException("Error fetching github repository, please make sure the repo exists and is not private."));
+  });
+  // work on this one, not correct
+  it('should error on commits call', async () => {
+    jest.spyOn(httpService, 'get').mockImplementation((url) => {
+      if (url === 'https://github-dummy-url.com/commits') {
+        return new BadRequestException('bad request coming from github for commits');
+      }
+      else if (url === 'https://github-dummy-url.com') {
+        return incorrectPrResult;
+      }
+    })
+    await expect(service.getPullRequests('https://incoming-url.com')).rejects.toEqual(new InternalServerErrorException("Error fetching github repository, please make sure the repo exists and is not private."));
   });
 });
