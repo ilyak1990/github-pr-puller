@@ -3,8 +3,8 @@ export class PullRequest {
     number:number
     title:string
     author:string
-    commit_count:number
-    constructor(id:number,number:number,title:string,author:string,commit_count:number){
+    commit_count:string
+    constructor(id:number,number:number,title:string,author:string,commit_count:string){
         this.id=id
         this.number=number
         this.title=title
