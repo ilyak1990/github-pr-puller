@@ -58,8 +58,6 @@ export class PullRequestsService {
           }
         }),
       );
-      //   )
-
       return pullRequests;
     } catch (err) {
       throw new InternalServerErrorException(
