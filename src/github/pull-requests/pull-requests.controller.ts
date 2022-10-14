@@ -5,8 +5,8 @@ import { PullRequestsService } from './pull-requests.service';
 export class PullRequestsController {
     constructor(private readonly pullRequestsService: PullRequestsService){}
     @Post()
-     async getPullRequests(@Body("githubUrl") url:string): Promise<any> {
-        return await this.pullRequestsService.getPullRequests(url);
+     async getPullRequests(@Body('githubUrl') url:string): Promise<any> {
+        return this.pullRequestsService.getPullRequests(url);
     }
 
 }
